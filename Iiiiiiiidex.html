@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DREAME | Global Art Authority</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;600&family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { --bg: #ffffff; --text: #000000; --gold: #AF964B; --grey: #f4f4f4; --border: #e8e8e8; --red: #ff4757; --green: #2ecc71; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: var(--text); padding-bottom: 80px; }
+
+        /* --- HEADER --- */
+        header { padding: 15px 5%; background: white; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 3000; }
+        .logo { font-family: 'Cormorant Garamond'; font-size: 1.8rem; letter-spacing: 4px; font-weight: 600; cursor: pointer; }
+        .user-badge { font-size: 0.6rem; font-weight: 800; border: 1px solid #000; padding: 5px 12px; text-transform: uppercase; }
+
+        /* --- SHEETS (PAGES) --- */
+        .sheet { display: none; min-height: 100vh; animation: fadeIn 0.4s ease; }
+        .sheet.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* --- MARKET GRID --- */
+        .art-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; padding: 30px 5%; }
+        .art-card { border: 1px solid var(--border); background: #fff; padding: 10px; }
+        .img-box { width: 100%; height: 320px; background: var(--grey); overflow: hidden; position: relative; }
+        .img-box img { width: 100%; height: 100%; object-fit: cover; transition: 0.6s; }
+        .art-card:hover img { transform: scale(1.05); }
+        .meta { padding: 15px 5px 5px; }
+        .m-title { font-family: 'Cormorant Garamond'; font-size: 1.3rem; font-weight: 600; }
+        .m-price { color: var(--gold); font-weight: 700; font-size: 0.9rem; }
+        .m-artist { font-size: 0.65rem; text-transform: uppercase; font-weight: 800; color: #888; }
+        .card-actions { display: flex; justify-content: space-between; margin-top: 15px; border-top: 1px solid var(--border); padding-top: 10px; }
+        .like-btn { cursor: pointer; color: #ccc; font-size: 1.2rem; transition: 0.3s; }
+        .like-btn.liked { color: var(--red); }
+        .chat-btn { font-size: 0.7rem; font-weight: 700; background: #000; color: #fff; padding: 5px 10px; cursor: pointer; }
+
+        /* --- STUDIO / SETTINGS --- */
+        .wrap { max-width: 600px; margin: 40px auto; padding: 0 5%; }
+        label { display: block; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; color: #666; margin-bottom: 8px; margin-top: 20px; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); background: var(--grey); outline: none; margin-bottom: 10px; }
+        .btn-main { width: 100%; padding: 15px; background: black; color: white; border: none; cursor: pointer; font-weight: 700; margin-top: 20px; }
+        
+        /* IMAGE PREVIEW */
+        #preview-box { width: 100%; height: 250px; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-top: 10px; background: #fafafa; }
+        #preview-img { width: 100%; height: 100%; object-fit: contain; display: none; }
+
+        /* --- E2EE CHAT OVERLAY --- */
+        #chat-overlay { position: fixed; bottom: 80px; right: 20px; width: 350px; height: 450px; background: white; border: 1px solid #000; z-index: 5000; display: none; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .chat-head { background: #000; color: white; padding: 15px; font-size: 0.8rem; display: flex; justify-content: space-between; font-weight: 700; }
+        .chat-msgs { flex: 1; padding: 15px; overflow-y: auto; font-size: 0.85rem; background: var(--grey); }
+        .chat-input { padding: 10px; border-top: 1px solid var(--border); display: flex; background: #fff; }
+        .chat-input input { flex: 1; border: none; outline: none; padding: 5px; }
+
+        /* --- NAV --- */
+        nav { position: fixed; bottom: 0; width: 100%; background: white; border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 18px 0; z-index: 4000; }
+        .nav-link { font-size: 0.6rem; text-transform: uppercase; font-weight: 800; color: #ccc; cursor: pointer; }
+        .nav-link.active { color: var(--gold); }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo" onclick="window.nav('sheet-market')">DREAME<span>.</span></div>
+        <div class="user-badge" id="current-user-type">UNASSIGNED</div>
+    </header>
+
+    <div id="sheet-market" class="sheet active">
+        <div style="background:#000; color:#fff; padding:40px 5%; text-align:center;">
+            <h1 style="font-family:'Cormorant Garamond'; font-size:2.5rem;">Global Discovery</h1>
+            <p style="color:var(--gold); font-size:0.8rem; letter-spacing:2px;">THE 2026 ART MARKETPLACE</p>
+        </div>
+        <div class="art-grid" id="market-render">
+            <p style="text-align:center; width:100%; padding:50px; color:#888;">Connecting to DREAME Cloud...</p>
+        </div>
+    </div>
+
+    <div id="sheet-studio" class="sheet">
+        <div class="wrap">
+            <h1 style="font-family:'Cormorant Garamond'; font-size:2.5rem;">Artist Studio</h1>
+            <p style="font-size:0.8rem; color:#666;">Upload new works to the global feed.</p>
+
+            <label>Masterpiece Image File</label>
+            <input type="file" id="f-img" accept="image/*">
+            
+            <div id="preview-box">
+                <span id="preview-text" style="color:#aaa; font-size:0.8rem;">No Image Selected</span>
+                <img id="preview-img" src="" alt="Preview">
+            </div>
+
+            <label>Artwork Title</label>
+            <input type="text" id="f-title" placeholder="e.g. Echoes of Tomorrow">
+            
+            <label>Price (USD)</label>
+            <input type="number" id="f-price" placeholder="e.g. 1500">
+
+            <button class="btn-main" onclick="window.uploadArt()" id="upload-btn">PUBLISH MASTERPIECE</button>
+        </div>
+    </div>
+
+    <div id="sheet-settings" class="sheet">
+        <div class="wrap">
+            <h1 style="font-family:'Cormorant Garamond'; font-size:2.5rem;">Account Setup</h1>
+            
+            <label>DREAME Identity</label>
+            <select id="user-role-select" onchange="window.updateRole()">
+                <option value="Artist">Artist (Create & Sell)</option>
+                <option value="Gallery">Gallery (Represent Exhibitions)</option>
+                <option value="Collector">Collector (Acquire Art)</option>
+            </select>
+
+            <label>Display Name</label>
+            <input type="text" id="reg-name" placeholder="Your Name or Gallery Name">
+            
+            <label>Location</label>
+            <input type="text" id="reg-loc" placeholder="City, Country">
+
+            <button class="btn-main" onclick="window.saveSettings()">SAVE PROFILE</button>
+        </div>
+    </div>
+
+    <div id="chat-overlay">
+        <div class="chat-head">
+            <span style="color:var(--green);">🔒 E2EE SECURE DEAL</span>
+            <span onclick="window.closeChat()" style="cursor:pointer; font-size:1.2rem;">✕</span>
+        </div>
+        <div class="chat-msgs" id="chat-flow">
+            <div style="background:white; padding:10px; margin-bottom:10px; border-radius:5px; font-size:0.75rem; border-left:3px solid var(--green);">
+                <b>System:</b> Connection is End-to-End Encrypted. Discussing terms directly with the creator.
+            </div>
+        </div>
+        <div class="chat-input">
+            <input type="text" id="chat-in" placeholder="Propose an offer...">
+            <button onclick="window.sendMsg()" style="background:none; border:none; font-weight:700; cursor:pointer;">SEND</button>
+        </div>
+    </div>
+
+    <nav>
+        <div class="nav-link active" onclick="window.nav('sheet-market', this)">Market</div>
+        <div class="nav-link" onclick="window.nav('sheet-studio', this)">Upload</div>
+        <div class="nav-link" onclick="window.nav('sheet-settings', this)">Settings</div>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+
+        // Your Exact Firebase Keys
+        const firebaseConfig = {
+            apiKey: "AIzaSyBTMQFTg98IlF6_M0XYlVApCWJNS1x7kdY",
+            authDomain: "dreame-art-marketplace.firebaseapp.com",
+            projectId: "dreame-art-marketplace",
+            storageBucket: "dreame-art-marketplace.firebasestorage.app",
+            messagingSenderId: "349634033924",
+            appId: "1:349634033924:web:1c335929469949c4f43851",
+            measurementId: "G-XDKL1ZH218"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+
+        // --- 1. GLOBAL UI LOGIC (Attached to window so HTML buttons work) ---
+        window.nav = function(id, el) {
+            document.querySelectorAll('.sheet').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if(el) {
+                document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+                el.classList.add('active');
+            }
+            window.scrollTo(0,0);
+        };
+
+        window.updateRole = function() {
+            const role = document.getElementById('user-role-select').value;
+            document.getElementById('current-user-type').innerText = role;
+        };
+
+        window.saveSettings = function() {
+            localStorage.setItem('dreameName', document.getElementById('reg-name').value);
+            localStorage.setItem('dreameRole', document.getElementById('user-role-select').value);
+            window.updateRole();
+            alert("Settings Saved!");
+            window.nav('sheet-market');
+        };
+
+        // Initialize User Role on load
+        document.getElementById('current-user-type').innerText = localStorage.getItem('dreameRole') || "UNASSIGNED";
+
+        // --- 2. IMAGE PREVIEW LOGIC ---
+        document.getElementById('f-img').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    document.getElementById('preview-img').src = event.target.result;
+                    document.getElementById('preview-img').style.display = 'block';
+                    document.getElementById('preview-text').style.display = 'none';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // --- 3. LIKE & CHAT LOGIC ---
+        window.toggleLike = function(el) {
+            el.classList.toggle('liked');
+            if(el.classList.contains('liked')) { el.innerHTML = '❤'; } 
+            else { el.innerHTML = '♡'; }
+        };
+
+        window.openChat = function(artistName) {
+            document.getElementById('chat-overlay').style.display = 'flex';
+            document.getElementById('chat-flow').innerHTML += `<div style="margin-top:10px; font-size:0.8rem; color:#888;">Connecting to ${artistName}...</div>`;
+        };
+        window.closeChat = function() { document.getElementById('chat-overlay').style.display = 'none'; };
+        window.sendMsg = function() {
+            const val = document.getElementById('chat-in').value;
+            if(!val) return;
+            document.getElementById('chat-flow').innerHTML += `<div style="text-align:right; margin-top:10px;"><span style="background:#000; color:white; padding:8px 12px; border-radius:15px 15px 0 15px; display:inline-block;">${val}</span></div>`;
+            document.getElementById('chat-in').value = "";
+        };
+
+        // --- 4. FIREBASE DATA PULL (HOME FEED) ---
+        const q = query(collection(db, "artworks"), orderBy("timestamp", "desc"));
+        onSnapshot(q, (snapshot) => {
+            const feed = document.getElementById('market-render');
+            feed.innerHTML = ""; 
+            if(snapshot.empty) {
+                feed.innerHTML = "<p style='text-align:center; width:100%;'>No artworks uploaded yet. Be the first!</p>";
+            }
+            snapshot.forEach((doc) => {
+                const art = doc.data();
+                feed.innerHTML += `
+                    <div class="art-card">
+                        <div class="img-box"><img src="${art.imageURL}"></div>
+                        <div class="meta">
+                            <p class="m-artist">${art.artistName} • ${art.role}</p>
+                            <h3 class="m-title">${art.title}</h3>
+                            <p class="m-price">$${Number(art.price).toLocaleString()}</p>
+                            
+                            <div class="card-actions">
+                                <span class="like-btn" onclick="window.toggleLike(this)">♡</span>
+                                <button class="chat-btn" onclick="window.openChat('${art.artistName}')">SECURE DEAL</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        });
+
+        // --- 5. FIREBASE UPLOAD WITH PREVIEW ---
+        window.uploadArt = async function() {
+            const file = document.getElementById('f-img').files[0];
+            const title = document.getElementById('f-title').value;
+            const price = document.getElementById('f-price').value;
+            const uName = localStorage.getItem('dreameName') || "Anonymous";
+            const uRole = localStorage.getItem('dreameRole') || "Artist";
+
+            if(!file || !title || !price) {
+                alert("Please select an image and fill out all fields.");
+                return;
+            }
+
+            const btn = document.getElementById('upload-btn');
+            btn.innerText = "UPLOADING TO DREAME CLOUD...";
+            btn.style.background = "#AF964B"; // Gold while uploading
+
+            try {
+                // Upload Image
+                const storageRef = ref(storage, 'art/' + Date.now() + '_' + file.name);
+                await uploadBytes(storageRef, file);
+                const url = await getDownloadURL(storageRef);
+
+                // Save to Database
+                await addDoc(collection(db, "artworks"), {
+                    title: title,
+                    price: price,
+                    imageURL: url,
+                    artistName: uName,
+                    role: uRole,
+                    timestamp: Date.now()
+                });
+
+                alert("SUCCESS: Your work is live!");
+                
+                // Reset Studio Form
+                document.getElementById('f-title').value = "";
+                document.getElementById('f-price').value = "";
+                document.getElementById('preview-img').style.display = 'none';
+                document.getElementById('preview-text').style.display = 'block';
+                btn.innerText = "PUBLISH MASTERPIECE";
+                btn.style.background = "#000";
+                
+                // Jump to Market to see it
+                window.nav('sheet-market');
+
+            } catch (e) { 
+                console.error(e); 
+                alert("Upload failed. Make sure your Firebase Rules are set to public."); 
+                btn.innerText = "PUBLISH MASTERPIECE";
+                btn.style.background = "#000";
+            }
+        };
+    </script>
+</body>
+</html>
